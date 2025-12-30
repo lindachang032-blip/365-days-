@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>365天儲蓄挑戰 - 分享版</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg-color: #f5f2ed; --card-bg: #fffcf9; --primary-color: #d4a373; 
+            --secondary-color: #7a918d; --accent-color: #e9edc9; --text-main: #4a4238; 
+            --text-muted: #8b8071; --border-color: #e6dfd1; --shadow: 0 10px 15px -3px rgba(74, 66, 56, 0.08);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Quicksand', sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        .container { max-width: 1100px; width: 100%; }
+        header { text-align: center; margin-bottom: 30px; }
+        header h1 { font-size: 2.2rem; display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 8px;}
+        .share-banner { background: var(--accent-color); padding: 10px; border-radius: 12px; font-size: 0.8rem; margin-bottom: 20px; text-align: center; color: var(--text-main); font-weight: 600; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: var(--card-bg); padding: 20px; border-radius: 20px; box-shadow: var(--shadow); text-align: center; border: 1px solid var(--border-color); }
+        .stat-card .value { font-size: 1.6rem; font-weight: 700; color: var(--text-main); }
+        .stat-card .label { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; margin-bottom: 5px; display: block;}
+        .progress-container { background: var(--card-bg); padding: 20px; border-radius: 25px; margin-bottom: 30px; border: 1px solid var(--border-color); }
+        .progress-bar-bg { background: var(--border-color); height: 12px; border-radius: 10px; overflow: hidden; margin-top: 10px; }
+        .progress-bar-fill { background: linear-gradient(90deg, var(--primary-color), var(--secondary-color)); height: 100%; width: 0%; border-radius: 10px; transition: width 0.8s ease; }
+        .challenge-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)); gap: 12px; background: var(--card-bg); padding: 20px; border-radius: 25px; box-shadow: var(--shadow); border: 1px solid var(--border-color); }
+        .day-box { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #fdfaf7; border-radius: 15px; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
+        .day-box .day-num { font-size: 0.7rem; color: var(--text-muted); }
+        .day-box .amount { font-size: 1rem; font-weight: 700; }
+        .day-box:hover { transform: translateY(-2px); border-color: var(--primary-color); }
+        .day-box.paid { background-color: var(--secondary-color); color: white; }
+        .day-box.paid .day-num { color: rgba(255,255,255,0.8); }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .modal { background: white; padding: 30px; border-radius: 30px; width: 90%; max-width: 350px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+        .modal-amount { font-size: 3rem; font-weight: 700; margin: 15px 0; }
+        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
+        button { flex: 1; padding: 12px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; transition: opacity 0.2s; }
+        .btn-confirm { background: var(--primary-color); color: white; }
+        .btn-cancel { background: #eeeae4; color: var(--text-muted); }
+        .share-btn { margin-top: 20px; background: var(--secondary-color); color: white; padding: 10px 20px; border-radius: 10px; display: inline-flex; align-items: center; gap: 8px; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1><i data-lucide="piggy-bank"></i> 365天儲蓄挑戰</h1>
+        <p>每一份累積，都是對未來最好的投資</p>
+        <div class="share-banner">💡 本版本無需登入，進度會自動保存在網址中</div>
+    </header>
+    <div class="progress-container">
+        <div style="display: flex; justify-content: space-between;"><span style="font-weight: 700; font-size: 0.9rem;">我的挑戰進度</span><span id="percent-text" style="font-weight: 700; color: var(--primary-color);">0%</span></div>
+        <div class="progress-bar-bg"><div id="progress-fill" class="progress-bar-fill"></div></div>
+    </div>
+    <div class="stats-grid">
+        <div class="stat-card"><span class="label">已付清天數</span><div id="paid-days" class="value">0 / 365</div></div>
+        <div class="stat-card"><span class="label">累積存款</span><div id="paid-amount" class="value">$0</div></div>
+        <div class="stat-card"><span class="label">剩餘目標</span><div id="remaining-amount" class="value">$133,590</div></div>
+    </div>
+    <div id="challenge-grid" class="challenge-grid"></div>
+    <div style="text-align: center;">
+        <button class="share-btn" onclick="copyShareLink()">
+            <i data-lucide="share-2"></i> 複製分享連結（含進度）
+        </button>
+    </div>
+</div>
+
+<div id="modal-overlay" class="modal-overlay">
+    <div class="modal">
+        <h2 id="modal-title">支付確認</h2>
+        <div id="modal-amount" class="modal-amount">$0</div>
+        <div class="btn-group">
+            <button class="btn-cancel" onclick="closeModal()">取消</button>
+            <button class="btn-confirm" onclick="confirmAction()" id="btn-confirm-text">確定</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let state = {
+        paidDays: []
+    };
+
+    const totalDays = 365;
+    const totalGoal = (totalDays / 2) * (2 + (totalDays * 2));
+
+    // 從網址讀取資料
+    function loadFromUrl() {
+        const params = new URLSearchParams(window.location.search);
+        const data = params.get('d');
+        if (data) {
+            try {
+                // 簡單的解碼邏輯
+                state.paidDays = JSON.parse(atob(data));
+            } catch (e) {
+                console.error("解析失敗");
+            }
+        }
+    }
+
+    // 更新網址（不重新整理頁面）
+    function updateUrl() {
+        const encoded = btoa(JSON.stringify(state.paidDays));
+        const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?d=' + encoded;
+        window.history.replaceState({path: newUrl}, '', newUrl);
+    }
+
+    function renderGrid() {
+        const grid = document.getElementById('challenge-grid');
+        grid.innerHTML = '';
+        for (let i = 1; i <= totalDays; i++) {
+            const isPaid = state.paidDays.includes(i);
+            const box = document.createElement('div');
+            box.className = 'day-box' + (isPaid ? ' paid' : '');
+            box.innerHTML = `<span class="day-num">Day ${i}</span><span class="amount">$${i * 2}</span>`;
+            box.onclick = () => isPaid ? openRevokeModal(i) : openPaymentModal(i);
+            grid.appendChild(box);
+        }
+    }
+
+    function updateStats() {
+        const count = state.paidDays.length;
+        const currentSum = state.paidDays.reduce((sum, day) => sum + (day * 2), 0);
+        const remaining = totalGoal - currentSum;
+        const percentage = ((count / totalDays) * 100).toFixed(1);
+
+        document.getElementById('paid-days').innerText = `${count} / ${totalDays}`;
+        document.getElementById('paid-amount').innerText = `$${currentSum.toLocaleString()}`;
+        document.getElementById('remaining-amount').innerText = `$${remaining.toLocaleString()}`;
+        document.getElementById('percent-text').innerText = `${percentage}%`;
+        document.getElementById('progress-fill').style.width = `${percentage}%`;
+    }
+
+    let currentSelectingDay = null;
+    let isRevoking = false;
+
+    window.openPaymentModal = (day) => {
+        currentSelectingDay = day; isRevoking = false;
+        document.getElementById('modal-title').innerText = `Day ${day} 支付確認`;
+        document.getElementById('modal-amount').innerText = `$${day * 2}`;
+        document.getElementById('modal-amount').style.color = "var(--primary-color)";
+        document.getElementById('btn-confirm-text').innerText = "確定付款";
+        document.getElementById('modal-overlay').style.display = 'flex';
+    };
+
+    window.openRevokeModal = (day) => {
+        currentSelectingDay = day; isRevoking = true;
+        document.getElementById('modal-title').innerText = `取消 Day ${day} 支付?`;
+        document.getElementById('modal-amount').innerText = `$${day * 2}`;
+        document.getElementById('modal-amount').style.color = "#e57373";
+        document.getElementById('btn-confirm-text').innerText = "確定取消";
+        document.getElementById('modal-overlay').style.display = 'flex';
+    };
+
+    window.closeModal = () => { document.getElementById('modal-overlay').style.display = 'none'; };
+
+    window.confirmAction = () => {
+        if (isRevoking) {
+            state.paidDays = state.paidDays.filter(d => d !== currentSelectingDay);
+        } else {
+            state.paidDays.push(currentSelectingDay);
+        }
+        updateUrl();
+        renderGrid();
+        updateStats();
+        closeModal();
+    };
+
+    window.copyShareLink = () => {
+        const url = window.location.href;
+        const tempInput = document.createElement("input");
+        document.body.appendChild(tempInput);
+        tempInput.value = url;
+        tempInput.select();
+        document.execCommand("copy");
+        document.body.removeChild(tempInput);
+        alert("分享連結已複製！傳給別人他們就能看到目前的進度。");
+    };
+
+    window.onload = () => {
+        loadFromUrl();
+        renderGrid();
+        updateStats();
+        if (window.lucide) lucide.createIcons();
+    };
+</script>
+</body>
+</html>
